@@ -75,7 +75,6 @@ STROKES = [
 def wrap(angle):
     return math.atan2(math.sin(angle), math.cos(angle))
 
-
 # Menjaga kecepatan turtle dalam batas ttntu
 # Kalau ga pakai clamping turtle akan berhenti di tengah jalan dan lanjut
 def clamp(val, minval, maxval):
@@ -92,7 +91,7 @@ class TurtleArt(Node):
         self.pose = None
         self.steps = []  # langkah disimpan disini (x, y, pen_down)
         self.cwpidx = 0  # index wp saat ini
-        self.started = False
+        self.pen_ready = False
         self.state = "ROTATE"  # ROTATE atau MOVE
         self.pen_on = None  # atur pena menyentuh / tidak
         self.finished = False
@@ -133,7 +132,7 @@ class TurtleArt(Node):
         target_x, target_y, pen = self.steps[self.cwpidx]
 
         # Pengaturan pena
-        if not self.started:
+        if not self.pen_ready:
             if not self.pen_client.service_is_ready():
                 return
             if pen != self.pen_on:
@@ -145,7 +144,7 @@ class TurtleArt(Node):
 
                 self.pen_on = pen
 
-            self.started = True
+            self.pen_ready = True
             self.state = "ROTATE"
 
         # Menghitung selisih jarak antara koordinat target dan posisi turtle di sumbu
@@ -157,7 +156,7 @@ class TurtleArt(Node):
         if dist < 0.02:
             self.stop()
             self.cwpidx += 1
-            self.started = False
+            self.pen_ready = False
             return
 
         # delta_angle; atau sbrp banyak nilai/perubahan agar turtle menghadap target
@@ -175,7 +174,7 @@ class TurtleArt(Node):
             cmd.linear.x = clamp(3.0 * dist, 0.2, 3.0)
             if dist > 0.1:
                 cmd.angular.z = clamp(6.0 * del_angle, -3.0, 3.0)  # keep line straight
-            if abs(del_angle) > 0.4:
+            if abs(del_angle) > 0.4: 
                 self.state = "ROTATE"
 
         self.cmd_pub.publish(cmd)
